@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lockeen Localization</title>
+    <meta name="theme-color" content="#000000" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <!-- Babel for JSX transpilation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script type="importmap">
+      {
+        "imports": {
+          "react": "https://aistudiocdn.com/react@^19.1.1",
+          "react-dom/client": "https://aistudiocdn.com/react-dom@^19.1.1/client"
+        }
+      }
+    </script>
+  <link rel="stylesheet" href="/index.css">
+</head>
+  <body>
+    <div id="root"></div>
+    <script type="text/babel" data-type="module">
+      import React, { useState, useEffect, useRef } from 'react';
+      import ReactDOM from 'react-dom/client';
+
+      // --- CONSTANTS ---
+      const PORTFOLIO_URL = 'https://example.com/portfolio';
+      const OPENING_SOUND_URL = 'https://cdn.freesound.org/previews/27/27568_37876-lq.mp3';
+      const BACKGROUND_MUSIC_URL = 'https://cdn.pixabay.com/download/audio/2022/11/11/audio_518334a029.mp3';
+
+      // --- COMPONENTS ---
+
+      const Spinner = () => {
+        const frames = ['[ / ]', '[ - ]', '[ \\ ]', '[ | ]'];
+        const [frameIndex, setFrameIndex] = useState(0);
+
+        useEffect(() => {
+          const interval = setInterval(() => {
+            setFrameIndex((prevIndex) => (prevIndex + 1) % frames.length);
+          }, 150);
+          return () => clearInterval(interval);
+        }, []);
+
+        return <span className="text-2xl text-yellow-400">{frames[frameIndex]}</span>;
+      };
+
+      const AnimatedLogo = () => {
+        const [isAnimated, setIsAnimated] = useState(false);
+        const [showPrompt, setShowPrompt] = useState(false);
+        const audioRef = useRef(null);
+
+        useEffect(() => {
+          const animTimer = setTimeout(() => {
+            setIsAnimated(true);
+            if (audioRef.current) {
+              audioRef.current.play().catch(error => {
+                console.warn("Audio playback was prevented by the browser.", error);
+              });
+            }
+          }, 100);
+
+          const promptTimer = setTimeout(() => {
+            setShowPrompt(true);
+          }, 1200);
+
+          return () => {
+            clearTimeout(animTimer);
+            clearTimeout(promptTimer);
+          };
+        }, []);
+
+        return (
+          <div className="flex flex-col items-center justify-center gap-12" aria-live="polite">
+            <a
+              href={PORTFOLIO_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-4 focus-visible:ring-offset-black focus-visible:ring-cyan-400 rounded-lg"
+              aria-label="Visit Lockeen Portfolio"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center" role="img" aria-label="Lockeen Logo">
+                <span
+                  className={`
+                    block text-5xl md:text-6xl font-bold text-cyan-400 tracking-tight
+                    transition-all duration-1000 ease-in-out
+                    ${isAnimated ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-full'}
+                  `}
+                >
+                  loc
+                </span>
+                <span
+                  className={`
+                    block text-5xl md:text-6xl font-bold text-fuchsia-500 tracking-tight
+                    transition-all duration-1000 ease-in-out
+                    ${isAnimated ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-full'}
+                  `}
+                >
+                  keen
+                </span>
+              </div>
+            </a>
+            {showPrompt && (
+              <p className="text-yellow-400 text-lg animate-pulse">Click anywhere to continue</p>
+            )}
+            <audio ref={audioRef} src={OPENING_SOUND_URL} preload="auto" className="hidden" />
+          </div>
+        );
+      };
+
+      const ContactForm = ({ onGoBack }) => {
+        const [status, setStatus] = useState(null);
+        const [fileName, setFileName] = useState('');
+
+        const handleSubmit = (e) => {
+          e.preventDefault();
+          if (status) return;
+
+          setStatus(
+            <div className="flex items-center justify-center gap-2">
+              <Spinner />
+              <span>Preparing your email...</span>
+            </div>
+          );
+
+          const formData = new FormData(e.target);
+          const name = formData.get('name');
+          const email = formData.get('email');
+          const message = formData.get('message');
+
+          const subject = `Localization Project Inquiry from ${name}`;
+          const body = `Hello,\n\nMy name is ${name} (${email}).\n\nI'd like to discuss a project. Here are the details:\n\n${message}\n\n---\nNote: If you selected a file, please remember to attach it manually in your email client before sending.`;
+
+          const mailtoLink = `mailto:ikaya.ea@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+          
+          window.location.href = mailtoLink;
+
+          setTimeout(() => setStatus(null), 5000);
+        };
+        
+        const handleFileChange = (e) => {
+          setFileName(e.target.files?.[0]?.name || '');
+        };
+
+        return (
+          <div className="relative w-full max-w-lg p-8 text-white" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={(e) => { e.stopPropagation(); onGoBack(); }}
+              className="absolute top-4 right-4 text-yellow-400 text-2xl hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400 rounded"
+              aria-label="Go back"
+            >
+              [ ^ ]
+            </button>
+
+            <div className="flex items-center justify-center mb-6" role="img" aria-label="Lockeen Logo">
+              <span className="text-4xl font-bold text-cyan-400 tracking-tight">loc</span>
+              <span className="text-4xl font-bold text-fuchsia-500 tracking-tight">keen</span>
+            </div>
+
+            <h2 className="text-3xl text-center mb-2 text-yellow-400">// INITIATE CONTACT //</h2>
+            <p className="text-center text-sm mb-8 text-gray-400">Your vision, perfectly localized from English to Turkish.</p>
+            
+            <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+              <div className="flex flex-col gap-2">
+                <label htmlFor="name" className="text-lg text-green-400">NAME:</label>
+                <input type="text" id="name" name="name" required className="bg-black border-2 border-blue-500 p-2 focus:outline-none focus:bg-blue-900/50 transition-colors caret-yellow-400" />
+              </div>
+              <div className="flex flex-col gap-2">
+                <label htmlFor="email" className="text-lg text-green-400">E-MAIL:</label>
+                <input type="email" id="email" name="email" required className="bg-black border-2 border-blue-500 p-2 focus:outline-none focus:bg-blue-900/50 transition-colors caret-yellow-400" />
+              </div>
+              <div className="flex flex-col gap-2">
+                <label htmlFor="message" className="text-lg text-green-400">MESSAGE:</label>
+                <textarea id="message" name="message" required rows={4} placeholder="Please tell me about your project..." className="bg-black border-2 border-blue-500 p-2 focus:outline-none focus:bg-blue-900/50 transition-colors resize-none caret-yellow-400" />
+              </div>
+              <div className="flex flex-col gap-2">
+                <label htmlFor="file-upload" className="text-lg text-green-400">ATTACH FILE (OPTIONAL):</label>
+                <div className="flex items-center gap-4">
+                  <label htmlFor="file-upload" className="cursor-pointer bg-black border-2 border-blue-500 p-2 px-4 text-center text-white hover:bg-blue-900/50 transition-colors whitespace-nowrap">[ Choose File ]</label>
+                  <input id="file-upload" name="attachment" type="file" className="hidden" onChange={handleFileChange} />
+                  <span className="text-gray-400 text-sm truncate" aria-live="polite">{fileName || 'No file selected.'}</span>
+                </div>
+              </div>
+              <button type="submit" className="bg-green-500 text-black p-3 text-lg font-bold mt-4 hover:bg-green-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black focus:ring-green-300 transition-colors disabled:opacity-50" disabled={!!status}>[ Get an Offer ]</button>
+            </form>
+            <div className="mt-6 text-center text-green-400 h-8 flex items-center justify-center">{status}</div>
+          </div>
+        );
+      };
+
+      const App = () => {
+        const [isStarted, setIsStarted] = useState(false);
+        const [showContact, setShowContact] = useState(false);
+        const musicRef = useRef(null);
+
+        useEffect(() => {
+          if (isStarted && musicRef.current) {
+            musicRef.current.volume = 0.3;
+            musicRef.current.play().catch(error => {
+              console.warn("Music playback was prevented by the browser.", error);
+            });
+          }
+        }, [isStarted]);
+        
+        const handleStart = () => {
+          if (isStarted) return;
+          setIsStarted(true);
+        };
+        
+        const handleShowContact = () => {
+          if (!isStarted || showContact) return;
+          setShowContact(true);
+        };
+
+        const handleGoBack = () => {
+          setShowContact(false);
+        };
+
+        const handleClick = () => {
+          if (!isStarted) {
+            handleStart();
+          } else {
+            handleShowContact();
+          }
+        };
+
+        const renderContent = () => {
+          if (!isStarted) {
+            return (
+              <div 
+                className="text-yellow-400 text-center animate-pulse p-4 cursor-pointer w-full h-full flex items-center justify-center"
+                onClick={handleClick}
+                role="button"
+                tabIndex={0}
+                aria-label="Click to start"
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleClick(); }}
+              >
+                <p className="text-2xl">Click to Start</p>
+              </div>
+            );
+          }
+
+          return (
+            <div 
+              className="relative w-full h-screen overflow-hidden"
+              onClick={handleClick}
+              role="button"
+              tabIndex={showContact ? -1 : 0}
+              aria-label="Click to continue"
+            >
+              <div className={`absolute inset-0 flex flex-col items-center justify-center transition-transform duration-1000 ease-in-out ${showContact ? '-translate-y-full' : 'translate-y-0'}`}>
+                <AnimatedLogo />
+              </div>
+              <div className={`absolute inset-0 flex items-center justify-center transition-transform duration-1000 ease-in-out ${showContact ? 'translate-y-0' : 'translate-y-full'}`}>
+                <ContactForm onGoBack={handleGoBack} />
+              </div>
+            </div>
+          );
+        };
+
+        return (
+          <main 
+            className="bg-black min-h-screen flex items-center justify-center overflow-hidden"
+            style={{ fontFamily: "'Press Start 2P', cursive" }}
+          >
+            {renderContent()}
+            <audio 
+              ref={musicRef} 
+              src={BACKGROUND_MUSIC_URL} 
+              loop 
+              preload="auto" 
+              className="hidden"
+            />
+          </main>
+        );
+      };
+
+      // --- RENDER APP ---
+      const rootElement = document.getElementById('root');
+      const root = ReactDOM.createRoot(rootElement);
+      root.render(
+        <React.StrictMode>
+          <App />
+        </React.StrictMode>
+      );
+    </script>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>
