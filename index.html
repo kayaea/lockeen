@@ -30,6 +30,8 @@
           navigator.serviceWorker.register('/service-worker.js')
             .then(registration => {
               console.log('ServiceWorker registration successful with scope: ', registration.scope);
+              // This custom event lets the React app know it's safe to show the "offline ready" toast.
+              window.dispatchEvent(new CustomEvent('sw-ready'));
             })
             .catch(err => {
               console.log('ServiceWorker registration failed: ', err);
